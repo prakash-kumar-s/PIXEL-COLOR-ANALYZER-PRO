@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pixel Color Analyzer</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #4361ee;
+            --secondary: #3a0ca3;
+            --accent: #7209b7;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --success: #4cc9f0;
+            --warning: #f72585;
+            --card-bg: rgba(255, 255, 255, 0.08);
+            --card-border: rgba(255, 255, 255, 0.1);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: var(--light);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            text-align: center;
+            padding: 30px 0;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(to right, #4cc9f0, #f72585);
+        }
+        
+        h1 {
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+            background: linear-gradient(to right, #4cc9f0, #f72585);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            color: #b8b8b8;
+            margin-bottom: 20px;
+        }
+        
+        .tabs {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 50px;
+            padding: 5px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .tab {
+            padding: 12px 25px;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            flex: 1;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .tab.active {
+            background: var(--primary);
+            box-shadow: 0 5px 15px rgba(67, 97, 238, 0.4);
+        }
+        
+        .tab:hover:not(.active) {
+            background: rgba(67, 97, 238, 0.2);
+        }
+        
+        .page {
+            display: none;
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--card-border);
+        }
+        
+        .page.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .card {
+            background: var(--card-bg);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--card-border);
+        }
+        
+        h2 {
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            color: var(--success);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .upload-area {
+            border: 2px dashed var(--primary);
+            border-radius: 15px;
+            padding: 40px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+            position: relative;
+        }
+        
+        .upload-area:hover {
+            background: rgba(67, 97, 238, 0.1);
+            transform: translateY(-5px);
+        }
+        
+        .upload-area i {
+            font-size: 3rem;
+            color: var(--primary);
+            margin-bottom: 15px;
+        }
+        
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .btn:hover {
+            background: var(--secondary);
+            transform: translateY(-3px);
+            box-shadow: 0 7px 15px rgba(67, 97, 238, 0.4);
+        }
+        
+        .btn-secondary {
+            background: var(--accent);
+        }
+        
+        .btn-secondary:hover {
+            background: #5a08a0;
+        }
+        
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+        }
+        
+        .btn-outline:hover {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .canvas-container {
+            position: relative;
+            margin: 20px 0;
+            display: inline-block;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            max-width: 100%;
+        }
+        
+        canvas {
+            display: block;
+            max-width: 100%;
+            cursor: crosshair;
+        }
+        
+        .color-info {
+            display: flex;
+            align-items: center;
+            margin-top: 20px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            padding: 20px;
+        }
+        
+        .color-preview {
+            width: 80px;
+            height: 80px;
+            border-radius: 10px;
+            margin-right: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .color-details {
+            flex: 1;
+        }
+        
+        .color-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+        
+        .color-name {
+            font-size: 1.1rem;
+            color: #b8b8b8;
+        }
+        
+        .color-history {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .history-swatch {
+            width: 30px;
+            height: 30px;
+            border-radius: 5px;
+            cursor: pointer;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: transform 0.2s;
+        }
+        
+        .history-swatch:hover {
+            transform: scale(1.2);
+        }
+        
+        .video-container {
+            position: relative;
+            margin: 20px 0;
+            display: inline-block;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+        
+        video {
+            display: block;
+            max-width: 100%;
+            cursor: crosshair;
+        }
+        
+        .instructions {
+            background: rgba(76, 201, 240, 0.1);
+            border-left: 4px solid var(--success);
+            padding: 15px;
+            border-radius: 0 10px 10px 0;
+            margin-bottom: 20px;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .loading-spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 4px solid var(--primary);
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .zoom-controls {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 5px;
+            padding: 5px;
+            display: flex;
+            gap: 5px;
+        }
+        
+        .zoom-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 3px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .zoom-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        
+        .color-palette {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .palette-swatch {
+            width: 40px;
+            height: 40px;
+            border-radius: 5px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .palette-swatch:hover {
+            transform: scale(1.1);
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px;
+            color: #b8b8b8;
+            font-size: 0.9rem;
+        }
+        
+        /* URL Paste Styles */
+        .url-input-container {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        
+        .url-input {
+            flex: 1;
+            padding: 12px 15px;
+            border: 2px solid var(--primary);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 1rem;
+        }
+        
+        .url-input:focus {
+            outline: none;
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 0 0 2px var(--primary);
+        }
+        
+        .url-history-container {
+            margin-top: 30px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+        }
+        
+        .url-history-container h4 {
+            margin-bottom: 15px;
+            color: var(--success);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .url-history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .url-history-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+        
+        .url-history-item:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateX(5px);
+        }
+        
+        .url-truncate {
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            color: #b8b8b8;
+        }
+        
+        .url-actions {
+            display: flex;
+            gap: 5px;
+        }
+        
+        .url-load-btn, .url-delete-btn {
+            background: none;
+            border: none;
+            color: var(--light);
+            cursor: pointer;
+            padding: 6px 10px;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+            font-size: 0.8rem;
+        }
+        
+        .url-load-btn:hover {
+            background: var(--success);
+            color: white;
+        }
+        
+        .url-delete-btn:hover {
+            background: var(--warning);
+            color: white;
+        }
+        
+        .url-loading {
+            text-align: center;
+            padding: 20px;
+            color: var(--success);
+        }
+        
+        /* Loading animation */
+        .fa-spinner {
+            animation: spin 1s linear infinite;
+        }
+        
+        /* Empty state for history */
+        .url-history-empty {
+            text-align: center;
+            color: #b8b8b8;
+            font-style: italic;
+            padding: 20px;
+        }
+        
+        .image-item {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .image-item:hover::after {
+            content: 'Click to analyze';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 5px;
+            text-align: center;
+            font-size: 12px;
+        }
+        
+        @media (max-width: 768px) {
+            .tabs {
+                flex-direction: column;
+                border-radius: 15px;
+            }
+            
+            .tab {
+                margin-bottom: 5px;
+            }
+            
+            .image-grid {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            }
+            
+            .color-info {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .color-preview {
+                margin-right: 0;
+                margin-bottom: 15px;
+            }
+            
+            .url-input-container {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-palette"></i> Pixel Color Analyzer </h1>
+            <p class="subtitle">Extract, analyze, and explore colors from images, webcam, and URLs</p>
+        </header>
+        
+        <div class="tabs">
+            <div class="tab active" data-page="page1">
+                <i class="fas fa-upload"></i> Image Upload
+            </div>
+            <div class="tab" data-page="page2">
+                <i class="fas fa-camera"></i> Web Camera
+            </div>
+            <div class="tab" data-page="page3">
+                <i class="fas fa-link"></i> Paste URL
+            </div>
+        </div>
+        
+        <!-- Page 1: Image Upload -->
+        <div id="page1" class="page active">
+            <div class="card">
+                <h2><i class="fas fa-file-image"></i> Upload an Image</h2>
+                <p>Upload an image to analyze pixel colors. Click on any pixel to see its color information.</p>
+                
+                <div class="instructions">
+                    <p><strong>Instructions:</strong> Upload an image using the button below or drag and drop an image file. Then click on any pixel in the image to see its color details.</p>
+                </div>
+                
+                <div class="upload-area" id="dropArea">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <p>Click to upload an image</p>
+                    <p class="file-types">Supported formats: JPG, PNG, GIF, WEBP</p>
+                    <input type="file" id="fileInput" accept="image/*" style="display: none;">
+                </div>
+                
+                <div id="imageContainer" style="display: none;">
+                    <div class="canvas-container">
+                        <canvas id="imageCanvas"></canvas>
+                        <div class="zoom-controls">
+                            <button class="zoom-btn" id="zoomIn"><i class="fas fa-search-plus"></i></button>
+                            <button class="zoom-btn" id="zoomOut"><i class="fas fa-search-minus"></i></button>
+                            <button class="zoom-btn" id="resetZoom"><i class="fas fa-sync-alt"></i></button>
+                        </div>
+                    </div>
+                    
+                    <div class="color-info">
+                        <div class="color-preview" id="colorPreview"></div>
+                        <div class="color-details">
+                            <div class="color-value" id="colorValue">RGB(0, 0, 0) | #000000</div>
+                            <div class="color-name" id="colorName">Select a pixel to see color information</div>
+                            <div class="color-history" id="colorHistory"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <h3><i class="fas fa-swatchbook"></i> Color Palette</h3>
+                        <p>Dominant colors extracted from your image:</p>
+                        <div class="color-palette" id="colorPalette"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Page 2: Web Camera -->
+        <div id="page2" class="page">
+            <div class="card">
+                <h2><i class="fas fa-camera"></i> Web Camera Analysis</h2>
+                <p>Use your webcam to analyze colors in real-time. Click on any pixel to see its color information.</p>
+                
+                <div class="instructions">
+                    <p><strong>Instructions:</strong> Click "Start Camera" to activate your webcam. Then click on any pixel in the video feed to see its color details.</p>
+                </div>
+                
+                <button class="btn" id="startCamera">
+                    <i class="fas fa-video"></i> Start Camera
+                </button>
+                <button class="btn btn-secondary" id="stopCamera" style="display: none;">
+                    <i class="fas fa-stop"></i> Stop Camera
+                </button>
+                <button class="btn btn-outline" id="captureFrame" style="display: none;">
+                    <i class="fas fa-camera"></i> Capture Frame
+                </button>
+                
+                <div id="cameraContainer" style="display: none; text-align: center;">
+                    <div class="video-container">
+                        <video id="video" autoplay playsinline></video>
+                    </div>
+                    
+                    <div class="color-info">
+                        <div class="color-preview" id="cameraColorPreview"></div>
+                        <div class="color-details">
+                            <div class="color-value" id="cameraColorValue">RGB(0, 0, 0) | #000000</div>
+                            <div class="color-name" id="cameraColorName">Select a pixel to see color information</div>
+                            <div class="color-history" id="cameraColorHistory"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Page 3: URL Paste -->
+        <div id="page3" class="page">
+            <div class="card">
+                <h2><i class="fas fa-link"></i> Paste Image URL</h2>
+                <p>Paste a direct image URL from the web to analyze its colors</p>
+                
+                <div class="instructions">
+                    <p><strong>How to use:</strong></p>
+                    <ol>
+                        <li>Find an image on any website (Google Images, Unsplash, etc.)</li>
+                        <li>Right-click on the image and select "Copy image address"</li>
+                        <li>Paste the URL below and click "Load Image"</li>
+                        <li>Click on any pixel in the image to see its color information</li>
+                    </ol>
+                </div>
+                
+                <div class="url-input-container">
+                    <input type="text" id="imageUrlInput" placeholder="Paste image URL here (e.g., https://example.com/image.jpg)" class="url-input">
+                    <button class="btn" id="loadUrlBtn">
+                        <i class="fas fa-download"></i> Load Image
+                    </button>
+                </div>
+                
+                <div class="loading" id="urlLoading">
+                    <div class="loading-spinner"></div>
+                    <p>Loading image from URL...</p>
+                </div>
+                
+                <div id="urlImageContainer" style="display: none;">
+                    <div class="canvas-container">
+                        <canvas id="urlImageCanvas"></canvas>
+                        <div class="zoom-controls">
+                            <button class="zoom-btn" id="urlZoomIn"><i class="fas fa-search-plus"></i></button>
+                            <button class="zoom-btn" id="urlZoomOut"><i class="fas fa-search-minus"></i></button>
+                            <button class="zoom-btn" id="urlResetZoom"><i class="fas fa-sync-alt"></i></button>
+                        </div>
+                    </div>
+                    
+                    <div class="color-info">
+                        <div class="color-preview" id="urlColorPreview"></div>
+                        <div class="color-details">
+                            <div class="color-value" id="urlColorValue">RGB(0, 0, 0) | #000000</div>
+                            <div class="color-name" id="urlColorName">Select a pixel to see color information</div>
+                            <div class="color-history" id="urlColorHistory"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <h3><i class="fas fa-swatchbook"></i> Color Palette</h3>
+                        <p>Dominant colors extracted from the image:</p>
+                        <div class="color-palette" id="urlColorPalette"></div>
+                    </div>
+                </div>
+                
+                <div class="url-history-container">
+                    <h4><i class="fas fa-history"></i> Recent URLs</h4>
+                    <div id="urlHistoryList" class="url-history-list">
+                        <!-- URL history will appear here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        
+    </div>
+
+    <script type="module" src="./main.js"></script>
+</body>
+</html>
