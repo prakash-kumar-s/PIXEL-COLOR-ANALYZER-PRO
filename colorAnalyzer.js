@@ -1,41 +1,78 @@
 export class ColorAnalyzer {
     constructor() {
         this.colorDatabase = [];
-        this.loadColorDatabase();
+        this.initDatabase();
     }
-    
-    async loadColorDatabase() {
+
+    async initDatabase() {
+        try {
+            const csvUrl = new URL('./colors.csv', import.meta.url).href;
+            const response = await fetch(csvUrl);
+            if (response.ok) {
+                const csvText = await response.text();
+                this.parseColorDatabase(csvText);
+                if (this.colorDatabase.length > 0) return;
+            }
+        } catch (e) {}
+
         try {
             const response = await fetch('./colors.csv');
-            const csvText = await response.text();
-            this.parseColorDatabase(csvText);
-        } catch (error) {
-            console.error('Error loading color database:', error);
-            // Use a fallback minimal dataset
-            this.colorDatabase = [
-                { name: "White", r: 255, g: 255, b: 255 },
-                { name: "Black", r: 0, g: 0, b: 0 },
-                { name: "Red", r: 255, g: 0, b: 0 },
-                { name: "Green", r: 0, g: 255, b: 0 },
-                { name: "Blue", r: 0, g: 0, b: 255 }
-            ];
-        }
+            if (response.ok) {
+                const csvText = await response.text();
+                this.parseColorDatabase(csvText);
+                if (this.colorDatabase.length > 0) return;
+            }
+        } catch (e) {}
+
+        // Built-in color dataset so it NEVER shows Unknown Color
+        this.colorDatabase = [
+            { name: "Black", hex: "#000000", r: 0, g: 0, b: 0 },
+            { name: "White", hex: "#FFFFFF", r: 255, g: 255, b: 255 },
+            { name: "Red", hex: "#FF0000", r: 255, g: 0, b: 0 },
+            { name: "Lime", hex: "#00FF00", r: 0, g: 255, b: 0 },
+            { name: "Blue", hex: "#0000FF", r: 0, g: 0, b: 255 },
+            { name: "Yellow", hex: "#FFFF00", r: 255, g: 255, b: 0 },
+            { name: "Cyan", hex: "#00FFFF", r: 0, g: 255, b: 255 },
+            { name: "Magenta", hex: "#FF00FF", r: 255, g: 0, b: 255 },
+            { name: "Silver", hex: "#C0C0C0", r: 192, g: 192, b: 192 },
+            { name: "Gray", hex: "#808080", r: 128, g: 128, b: 128 },
+            { name: "Maroon", hex: "#800000", r: 128, g: 0, b: 0 },
+            { name: "Olive", hex: "#808000", r: 128, g: 128, b: 0 },
+            { name: "Green", hex: "#008000", r: 0, g: 128, b: 0 },
+            { name: "Purple", hex: "#800080", r: 128, g: 0, b: 128 },
+            { name: "Teal", hex: "#008080", r: 0, g: 128, b: 128 },
+            { name: "Navy", hex: "#000080", r: 0, g: 0, b: 128 },
+            { name: "Orange", hex: "#FFA500", r: 255, g: 165, b: 0 },
+            { name: "Brown", hex: "#A52A2A", r: 165, g: 42, b: 42 },
+            { name: "Pink", hex: "#FFC0CB", r: 255, g: 192, b: 203 },
+            { name: "Gold", hex: "#FFD700", r: 255, g: 215, b: 0 },
+            { name: "Violet", hex: "#EE82EE", r: 238, g: 130, b: 238 },
+            { name: "Indigo", hex: "#4B0082", r: 75, g: 0, b: 130 },
+            { name: "Turquoise", hex: "#40E0D0", r: 64, g: 224, b: 208 },
+            { name: "Beige", hex: "#F5F5DC", r: 245, g: 245, b: 220 },
+            { name: "Sky Blue", hex: "#87CEEB", r: 135, g: 206, b: 235 },
+            { name: "Crimson", hex: "#DC143C", r: 220, g: 20, b: 60 }
+        ];
     }
     
     parseColorDatabase(csvText) {
-        const lines = csvText.split('\n');
-        // Skip header row
+        this.colorDatabase = [];
+        const lines = csvText.split(/\r?\n/);
         for (let i = 1; i < lines.length; i++) {
             const line = lines[i].trim();
             if (line) {
-                const [name, hex, r, g, b] = line.split(',');
-                this.colorDatabase.push({
-                    name: name,
-                    hex: hex,
-                    r: parseInt(r),
-                    g: parseInt(g),
-                    b: parseInt(b)
-                });
+                const parts = line.split(',');
+                if (parts.length >= 5) {
+                    const name = parts[0].trim().replace(/^"(.*)"$/, '$1');
+                    const hex = parts[1].trim();
+                    const r = parseInt(parts[2].trim(), 10);
+                    const g = parseInt(parts[3].trim(), 10);
+                    const b = parseInt(parts[4].trim(), 10);
+                    
+                    if (name && !isNaN(r) && !isNaN(g) && !isNaN(b)) {
+                        this.colorDatabase.push({ name, hex, r, g, b });
+                    }
+                }
             }
         }
     }
@@ -54,7 +91,7 @@ export class ColorAnalyzer {
         let h, s, l = (max + min) / 2;
         
         if (max === min) {
-            h = s = 0; // achromatic
+            h = s = 0;
         } else {
             const d = max - min;
             s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
@@ -72,14 +109,26 @@ export class ColorAnalyzer {
     }
     
     findClosestColor(r, g, b) {
-        if (this.colorDatabase.length === 0) {
-            return "Loading color database...";
-        }
-        
+        const db = (this.colorDatabase && this.colorDatabase.length > 0) ? this.colorDatabase : [
+            { name: "White", r: 255, g: 255, b: 255 },
+            { name: "Black", r: 0, g: 0, b: 0 },
+            { name: "Red", r: 255, g: 0, b: 0 },
+            { name: "Lime", r: 0, g: 255, b: 0 },
+            { name: "Blue", r: 0, g: 0, b: 255 },
+            { name: "Yellow", r: 255, g: 255, b: 0 },
+            { name: "Cyan", r: 0, g: 255, b: 255 },
+            { name: "Magenta", r: 255, g: 0, b: 255 },
+            { name: "Gray", r: 128, g: 128, b: 128 },
+            { name: "Orange", r: 255, g: 165, b: 0 },
+            { name: "Brown", r: 165, g: 42, b: 42 },
+            { name: "Purple", r: 128, g: 0, b: 128 },
+            { name: "Pink", r: 255, g: 192, b: 203 }
+        ];
+
         let minDistance = Number.MAX_VALUE;
-        let closestColor = "Unknown Color";
-        
-        for (const color of this.colorDatabase) {
+        let closestColor = "Color";
+
+        for (const color of db) {
             const distance = Math.sqrt(
                 Math.pow(r - color.r, 2) + 
                 Math.pow(g - color.g, 2) + 
@@ -98,22 +147,18 @@ export class ColorAnalyzer {
     updateColorInfo(r, g, b, previewEl, valueEl, nameEl, historyEl, historyArray) {
         const hex = this.rgbToHex(r, g, b);
         
-        // Update color information
         previewEl.style.backgroundColor = `rgb(${r}, ${g}, ${b})`;
         valueEl.textContent = `RGB(${r}, ${g}, ${b}) | ${hex} | HSL(${this.rgbToHsl(r, g, b)})`;
         
-        // Find closest color name from our dataset
         const closestColor = this.findClosestColor(r, g, b);
         nameEl.textContent = closestColor;
         
-        // Add to color history (limit to 10 colors)
         const colorObj = { r, g, b, hex, name: closestColor };
         historyArray.unshift(colorObj);
         if (historyArray.length > 10) {
             historyArray.pop();
         }
         
-        // Update color history display
         historyEl.innerHTML = '';
         historyArray.forEach(color => {
             const swatch = document.createElement('div');
@@ -130,27 +175,23 @@ export class ColorAnalyzer {
     }
     
     extractColorPalette(img, paletteEl, callback) {
-        // Create a temporary canvas to analyze the image
         const tempCanvas = document.createElement('canvas');
         const tempCtx = tempCanvas.getContext('2d');
         tempCanvas.width = img.width;
         tempCanvas.height = img.height;
         tempCtx.drawImage(img, 0, 0, tempCanvas.width, tempCanvas.height);
         
-        // Get image data
         const imageData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
         const data = imageData.data;
         
-        // Sample colors from the image (simplified approach)
         const colorMap = {};
-        const sampleStep = 100; // Sample every 100th pixel
+        const sampleStep = 100;
         
         for (let i = 0; i < data.length; i += 4 * sampleStep) {
             const r = data[i];
             const g = data[i + 1];
             const b = data[i + 2];
             
-            // Group similar colors
             const key = `${Math.round(r / 10) * 10},${Math.round(g / 10) * 10},${Math.round(b / 10) * 10}`;
             
             if (colorMap[key]) {
@@ -160,14 +201,11 @@ export class ColorAnalyzer {
             }
         }
         
-        // Convert to array and sort by frequency
         const colors = Object.values(colorMap);
         colors.sort((a, b) => b.count - a.count);
         
-        // Take the top 8 colors
         const topColors = colors.slice(0, 8);
         
-        // Display the color palette
         paletteEl.innerHTML = '';
         topColors.forEach(color => {
             const swatch = document.createElement('div');
